@@ -14,21 +14,19 @@ public class Person {
 	private String firstName; // Primeiro Nome
 	private String surName; // Sobrenome
 	
-	// Método Construtor
+	// Métodos Construtores
 	public Person(String firstName, String surName) {
 		super();
 		this.id = -1;
 		this.firstName = firstName;
 		this.surName = surName;
-	}
-	
+	}	
 	public Person(int id, String firstName, String surName) {
 		super();
 		this.id = id;
 		this.firstName = firstName;
 		this.surName = surName;
-	}
-	
+	}	
 	public Person() {
 		super();
 		this.id = -1;
@@ -80,20 +78,24 @@ public class Person {
 	}
 	
 	// Retorna uma lista de todas as pessoas cadastradas no banco.
-	public static List<Person> ListPeople(ConnectDB connection) {
+	public static List<Person> ListPeople(ConnectDB connection, boolean print) {
 		List<Person> list = new ArrayList<>();
 		String sql = "SELECT * from person;";	
 		
 		try {
 		    PreparedStatement statement = connection.connect().prepareStatement(sql);
 			ResultSet rs = statement.executeQuery(sql);
+			if(print) System.out.println("[ID] Nome Sobrenome");
 			while(rs.next()) {
 				int idPerson = rs.getInt("idPerson");
 				String firstName = rs.getString("firstName");
 				String surName = rs.getString("surName");
-				System.out.println(idPerson + " " + firstName + " " + surName);
+				if(print) System.out.println("[" + idPerson + "] " + firstName + " " + surName);
 				Person p = new Person(idPerson, firstName, surName);
 				list.add(p);
+			}
+			if (list.isEmpty()){
+				System.out.println("Nenhuma pessoa cadastrada no sistema...");
 			}
 			return list;
 		} catch (SQLException e) {
