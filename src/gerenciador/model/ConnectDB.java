@@ -68,9 +68,8 @@ public class ConnectDB {
 	public void ClearAllocations(ConnectDB connection) {
 		String sql1 = "DELETE FROM room_allocation;";
 		try {
-			int status = 0;
 		    PreparedStatement statement = connection.connect().prepareStatement(sql1);			
-			status = statement.executeUpdate();
+			statement.executeUpdate();
 		} catch (SQLException e) {
 		    e.printStackTrace();
 		} finally {

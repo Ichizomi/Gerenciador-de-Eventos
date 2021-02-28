@@ -32,7 +32,8 @@ public class EventManager {
 		System.out.println("1) Consultar/Listar Dados");
 		System.out.println("2) Cadastrar/Alterar/Remover Dados");
 		System.out.println("3) Organizar Evento");
-		System.out.println("4) Limpar Banco de Dados");
+		System.out.println("4) Ver Cronograma do Evento");
+		System.out.println("5) Limpar Banco de Dados");
 		System.out.println("--- ----------------------------------- ---");
 		System.out.print("Digite o número da opção desejada: ");
 		int choice = ReadOption();
@@ -49,6 +50,10 @@ public class EventManager {
 				OrganizeEvent();
 				break;
 			case 4:
+				ShowSchedule();
+				ShowMenu0();
+				break;
+			case 5:
 				System.out.println("Essa operação irá deletar os dados em todas as tabelas do banco de dados. Para continuar digite \"SIM\": ");
 				String confirm = scan.nextLine();
 				if(confirm.contains("SIM")) {
@@ -78,19 +83,136 @@ public class EventManager {
 		System.out.println("--- ----------------------------------- ---");
 		System.out.print("Digite o número da opção desejada: ");
 		int choice = ReadOption();
+		int id = -1;
+		List<Integer> ids = new ArrayList<>();
+		List<RoomAllocation> allocations = new ArrayList<>();
 		System.out.println();
 		switch(choice) {
 			case 1: // 1) Lista Salas de Evento
-				EventRoom.ListRoom(conn, true);
-				ShowMenu1();
+				List<EventRoom> listER = EventRoom.ListRoom(conn, true);				
+				for(int i = 0; i < listER.size(); i++) {
+					ids.add(listER.get(i).getId());
+				}
+				System.out.println();
+				System.out.println("Para ver mais detalhes de uma sala, entre com o ID: ");
+				id = ReadOption();
+				if(ids.contains(id)) {
+					int roomType = Room.CheckRoomTypeByID(conn, id);
+					if(roomType == 1) {
+						System.out.println("------------ " + EventRoom.SearchRoomByID(conn, id).getName() + " ---------");
+						// Etapa 1						
+						System.out.println("------------ ETAPA 1 ---------");
+						allocations = RoomAllocation.ListAllocation(conn, "eventPhase = 1 AND Room_idRoom = " + id);
+						for(int i = 0; i < allocations.size(); i++) {
+							int personID = allocations.get(i).getIdPerson();
+							Person pTemp = Person.SearchPersonByID(conn, personID);
+							System.out.println("(Participante) ID: " + pTemp.getId() +"  Nome: " + pTemp.getFirstName() + " " + pTemp.getSurName());
+						}
+						allocations.clear();
+						// Etapa 2
+						System.out.println("------------ ETAPA 2 ---------");
+						allocations = RoomAllocation.ListAllocation(conn, "eventPhase = 2 AND Room_idRoom = " + id);
+						for(int i = 0; i < allocations.size(); i++) {
+							int personID = allocations.get(i).getIdPerson();
+							Person pTemp = Person.SearchPersonByID(conn, personID);
+							System.out.println("(Participante) ID: " + pTemp.getId() +"  Nome: " + pTemp.getFirstName() + " " + pTemp.getSurName());
+						}
+						System.out.println("--------------------------");
+						ShowMenu1();
+					} else {
+						ShowMenu1();
+					}
+				} else {
+					ShowMenu1();
+				}
 				break;
 			case 2: // 2) Listar Salas de Café
-				CoffeeRoom.ListRoom(conn, true);
-				ShowMenu1();
+				List<CoffeeRoom> listCR  = CoffeeRoom.ListRoom(conn, true);
+				for(int i = 0; i < listCR.size(); i++) {
+					ids.add(listCR.get(i).getId());
+				}
+				System.out.println();
+				System.out.println("Para ver mais detalhes de uma sala, entre com o ID: ");
+				id = ReadOption();
+				if(ids.contains(id)) {
+					int roomType = Room.CheckRoomTypeByID(conn, id);
+					if(roomType == 2) {
+						System.out.println("------------ " + CoffeeRoom.SearchRoomByID(conn, id).getName() + " ---------");
+						// Etapa 1						
+						System.out.println("------------ ETAPA 1 ---------");
+						allocations = RoomAllocation.ListAllocation(conn, "eventPhase = 1 AND Room_idRoom = " + id);
+						for(int i = 0; i < allocations.size(); i++) {
+							int personID = allocations.get(i).getIdPerson();
+							Person pTemp = Person.SearchPersonByID(conn, personID);
+							System.out.println("(Participante) ID: " + pTemp.getId() +"  Nome: " + pTemp.getFirstName() + " " + pTemp.getSurName());
+						}
+						allocations.clear();
+						// Etapa 2						
+						System.out.println("------------ ETAPA 2 ---------");
+						allocations = RoomAllocation.ListAllocation(conn, "eventPhase = 2 AND Room_idRoom = " + id);
+						for(int i = 0; i < allocations.size(); i++) {
+							int personID = allocations.get(i).getIdPerson();
+							Person pTemp = Person.SearchPersonByID(conn, personID);
+							System.out.println("(Participante) ID: " + pTemp.getId() +"  Nome: " + pTemp.getFirstName() + " " + pTemp.getSurName());
+						}
+						System.out.println("--------------------------");
+						ShowMenu1();
+					} else {
+						ShowMenu1();
+					}
+				} else {
+					ShowMenu1();
+				}
 				break;
 			case 3: // 3) Listar Pessoas
-				Person.ListPeople(conn, true);
-				ShowMenu1();
+				List<Person> listP = Person.ListPeople(conn, true);
+				for(int i = 0; i < listP.size(); i++) {
+					ids.add(listP.get(i).getId());
+				}
+				System.out.println();
+				System.out.println("Para ver mais detalhes de uma pessoa, entre com o ID: ");
+				id = ReadOption();
+				if(ids.contains(id)) {
+					
+						System.out.println("------------ " + Person.SearchPersonByID(conn, id).getFirstName() + " " + Person.SearchPersonByID(conn, id).getSurName() + " ---------");
+						// Etapa 1						
+						System.out.println("------------ ETAPA 1 ---------");
+						allocations = RoomAllocation.ListAllocation(conn, "eventPhase = 1 AND Person_idPerson = " + id);
+						for(int i = 0; i < allocations.size(); i++) {
+							int roomID = allocations.get(i).getIdRoom();
+							int rType = Room.CheckRoomTypeByID(conn, roomID);
+							if(rType == 1) {
+								EventRoom erTemp = EventRoom.SearchRoomByID(conn, roomID);
+								System.out.println("(Sala de Evento) ID: " + erTemp.getId() +"  Nome: " + erTemp.getName() + " Lotação: " + erTemp.getMaxCapacity());
+								
+							} else if (rType == 2) {
+								CoffeeRoom crTemp = CoffeeRoom.SearchRoomByID(conn, roomID);
+								System.out.println("(Sala de Café) ID: " + crTemp.getId() +"  Nome: " + crTemp.getName() + " Lotação: " + crTemp.getMaxCapacity());
+								
+							}
+						}
+						allocations.clear();
+						// Etapa 2						
+						System.out.println("------------ ETAPA 2 ---------");
+						allocations = RoomAllocation.ListAllocation(conn, "eventPhase = 2 AND Person_idPerson = " + id);
+						for(int i = 0; i < allocations.size(); i++) {
+							int roomID = allocations.get(i).getIdRoom();
+							int rType = Room.CheckRoomTypeByID(conn, roomID);
+							if(rType == 1) {
+								EventRoom erTemp = EventRoom.SearchRoomByID(conn, roomID);
+								System.out.println("(Sala de Evento) ID: " + erTemp.getId() +"  Nome: " + erTemp.getName() + " Lotação: " + erTemp.getMaxCapacity());
+								
+							} else if (rType == 2) {
+								CoffeeRoom crTemp = CoffeeRoom.SearchRoomByID(conn, roomID);
+								System.out.println("(Sala de Café) ID: " + crTemp.getId() +"  Nome: " + crTemp.getName() + " Lotação: " + crTemp.getMaxCapacity());
+								
+							}
+						}
+						ShowMenu1();
+
+				} else {
+					ShowMenu1();
+				}
 				break;
 			case 4: // 4) Voltar ao menu inicial...
 				ShowMenu0();
@@ -546,8 +668,7 @@ public class EventManager {
 		}		
 		return choice;
 	}
-	
-	
+		
 	// Lista uma pessoa do banco de dados e permite escolher um ID entre as opções listadas.
 	private static int ListPersonFromDBAndPickOption(String operationMessage){
 		
@@ -822,6 +943,7 @@ public class EventManager {
 		
 	}
 	
+	// Imprime o cronograma do evento.
 	private static void ShowSchedule() {		
 		List<Integer> allocationsPerRoomPhase1 = RoomAllocation.GetNumberOfAllocationsPerRoom(conn, 1);
 		List<Integer> allocationsPerRoomPhase2 = RoomAllocation.GetNumberOfAllocationsPerRoom(conn, 2);
