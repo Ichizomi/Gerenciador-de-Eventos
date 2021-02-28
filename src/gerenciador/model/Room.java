@@ -1,6 +1,7 @@
 package gerenciador.model;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 // Uma sala.
@@ -69,6 +70,24 @@ public abstract class Room {
 			}
 		} catch (SQLException e) {
 		    e.printStackTrace();
+		} finally {
+			connection.disconnect();
+		}
+	}
+	
+	public static int CheckRoomTypeByID(ConnectDB connection, int id) {
+		int roomType = -1;
+		String sql = "SELECT roomType FROM room WHERE idRoom = " + id + ";";			
+		try {
+		    PreparedStatement statement = connection.connect().prepareStatement(sql);
+			ResultSet rs = statement.executeQuery(sql);
+			while(rs.next()) {
+				roomType = rs.getInt("roomType");
+			}
+			return roomType;
+		} catch (SQLException e) {
+		    e.printStackTrace();
+		    return -1;
 		} finally {
 			connection.disconnect();
 		}

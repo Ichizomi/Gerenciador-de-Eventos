@@ -151,6 +151,28 @@ public class Person {
 		}
 	}
 	
+	// Busca pessoa no banco de dados (por ID).
+	public static Person SearchPersonByID(ConnectDB connection, int id) {
+		Person p = new Person();
+		String sql = "SELECT * from person where idPerson = " + id + ";";			
+		try {
+		    PreparedStatement statement = connection.connect().prepareStatement(sql);
+			ResultSet rs = statement.executeQuery(sql);
+			while(rs.next()) {
+				int idPerson = rs.getInt("idPerson");
+				String firstName = rs.getString("firstName");
+				String surName = rs.getString("surName");
+				p = new Person(idPerson, firstName, surName);
+			}
+			return p;
+		} catch (SQLException e) {
+		    e.printStackTrace();
+		    return p;
+		} finally {
+			connection.disconnect();
+		}
+	}
+	
 	// Remove pessoa do banco de dados (por ID).
 	public static void RemovePersonByID(ConnectDB connection, int id) {
 		String sql = "DELETE from person where idPerson=" + id + ";";		

@@ -87,6 +87,28 @@ public class EventRoom extends Room{
 			connection.disconnect();
 		}
 	}
+
+	// Consultar salas de evento no banco de dados (por id).
+	public static EventRoom SearchRoomByID(ConnectDB connection, int id) {
+		EventRoom r = new EventRoom();
+		String sql = "SELECT * FROM room WHERE idRoom = " + id + " AND roomType = 1;";			
+		try {
+		    PreparedStatement statement = connection.connect().prepareStatement(sql);
+			ResultSet rs = statement.executeQuery(sql);
+			while(rs.next()) {
+				int idRoom = rs.getInt("idRoom");
+				String name = rs.getString("name");
+				int maxCapacity = rs.getInt("maxCapacity");					
+				r = new EventRoom(idRoom, name, maxCapacity);
+			}
+			return r;
+		} catch (SQLException e) {
+		    e.printStackTrace();
+		    return r;
+		} finally {
+			connection.disconnect();
+		}
+	}
 	
 	// Atualiza dados de uma sala de evento no banco de dados (por ID)
 	public static void UpdateRoom(ConnectDB connection, int id, EventRoom updatedRoom) {

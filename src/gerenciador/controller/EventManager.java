@@ -627,7 +627,7 @@ public class EventManager {
 		conn.ClearAllocations(conn);
 		
 		// Passo 1 - Verificar se há dados minimos para as duas etapas.
-		System.out.println("Verificando requisitos mínimos...");		
+		System.out.print("Verificando requisitos mínimos...");		
 		
 		// Participantes >= 4
 		if(participants.size() < 4) {
@@ -657,12 +657,12 @@ public class EventManager {
 			ShowMenu0();
 		}
 		
-		// Espaço suficiente nas salas de café.
+		// Espaço suficiente nas salas de café. O espaço deve ser maior que o dobro do número de participantes para que as salas de café sejam distintas nas duas etapas do evento.
 		int totalCoffeeRoomCapacity = 0;
 		for(int i = 0; i < eventRooms.size(); i++) {
 			totalCoffeeRoomCapacity += eventRooms.get(i).getMaxCapacity();
 		}
-		if(totalCoffeeRoomCapacity < participants.size()) {
+		if(totalCoffeeRoomCapacity < participants.size() * 2) {
 			System.out.println("Organização interrompida! Há mais participantes (" + participants.size() + ") do que espaço em salas de café(" + totalCoffeeRoomCapacity + "). Favor tentar novamente...");
 			ShowMenu0();
 		}
@@ -674,111 +674,200 @@ public class EventManager {
 		// Regra de Negócio - Metade das pessoas em uma sala devem mudar de sala para o segundo estágio.
 		
 		// Alocar Salas para o Evento
-		List<EventRoom> allocatedRooms = new ArrayList<>(); // Lista de Salas Reservadas
+		List<EventRoom> allocatedEventRooms = new ArrayList<>(); // Lista de Salas Reservadas
 		int currentEventRoomAllocations = 0; // Espaços de sala já alocados.
 		for(int i = 0; i < eventRooms.size(); i++) {
 			// Se ainda não foram alocados espaços suficiente.
 			if(totalEventRoomCapacity > currentEventRoomAllocations) {
 				currentEventRoomAllocations += eventRooms.get(i).getMaxCapacity(); // Aloca espaços.
-				allocatedRooms.add(eventRooms.get(i)); // Reserva a sala.
+				allocatedEventRooms.add(eventRooms.get(i)); // Reserva a sala.
 			} else {
 				break; // Se já foram alocados espaços suficiente, não é preciso usar as salas restantes.
-			}
-			
+			}			
+		}
+		// Alocar Salas para intervalo de café.
+		List<CoffeeRoom> allocatedCoffeeRoomsPhase1 = new ArrayList<>(); // Lista de Salas Reservadas
+		List<CoffeeRoom> allocatedCoffeeRoomsPhase2 = new ArrayList<>(); // Lista de Salas Reservadas
+		int currentCoffeeRoomAllocations = 0; // Espaços de sala já alocados.
+		for(int i = 0; i < coffeeRooms.size(); i++) {
+			// Se ainda não foram alocados espaços suficiente.
+			if(totalCoffeeRoomCapacity / 2 > currentCoffeeRoomAllocations) {
+				currentCoffeeRoomAllocations += coffeeRooms.get(i).getMaxCapacity(); // Aloca espaços.
+				allocatedCoffeeRoomsPhase1.add(coffeeRooms.get(i)); // Reserva a sala.
+			} else {
+				if(totalCoffeeRoomCapacity > currentCoffeeRoomAllocations) {
+					currentCoffeeRoomAllocations += coffeeRooms.get(i).getMaxCapacity(); // Aloca espaços.
+					allocatedCoffeeRoomsPhase2.add(coffeeRooms.get(i)); // Reserva a sala.
+				} else {
+					break; // Se já foram alocados espaços suficiente, não é preciso usar as salas restantes.
+				}				
+			}			
 		}
 		
-		// Etapa 1 do Evento.
-		System.out.println("Organizando Etapa 1...");
+		// Etapa 1 do Evento.		
 		Collections.shuffle(participants); // Randomiza participantes.
-		RoomAllocation[] allocations1 = new RoomAllocation[participants.size()]; // Alocações para a etapa 1 do evento.
-		System.out.println("Número de Participantes: " + allocations1.length);
+		RoomAllocation[] eventAllocationsPhase1 = new RoomAllocation[participants.size()]; // Alocações para a etapa 1 do evento.
+		RoomAllocation[] coffeeAllocationsPhase1 = new RoomAllocation[participants.size()]; // Alocações para a etapa 1 do evento.
+		System.out.println("Número de Participantes: " + eventAllocationsPhase1.length);
 		
 
 		System.out.println("Total de Salas de Eventos: " + eventRooms.size());
-		System.out.println("Número de Salas de Evento Reservadas: " + allocatedRooms.size());
+		System.out.println("Número de Salas de Evento Reservadas: " + allocatedEventRooms.size());
 		
 		// Distribui Participantes entre as salas reservadas (alternando em 1 para cada sala).
+		System.out.print("Organizando Etapa 1...  ");
+		// Salas de Evento
 		int r = 0; // indice da sala. 
 		RoomAllocation temp = new RoomAllocation();
 		for(int i = 0; i < participants.size(); i++) {
 			temp = new RoomAllocation();
 			temp.setEventPhase(1);
 			temp.setIdPerson(participants.get(i).getId());
-			temp.setIdRoom(allocatedRooms.get(r).getId());	
-			if(r >= allocatedRooms.size() - 1) {
+			temp.setIdRoom(allocatedEventRooms.get(r).getId());	
+			if(r >= allocatedEventRooms.size() - 1) {
 				r = 0;
 			} else {
 				r++;
 			}		
-			allocations1[i] = temp;
+			eventAllocationsPhase1[i] = temp;
 		}
+		// Salas de Café
+		r = 0; // indice da sala. 
+		temp = new RoomAllocation();
+		for(int i = 0; i < participants.size(); i++) {
+			temp = new RoomAllocation();
+			temp.setEventPhase(1);
+			temp.setIdPerson(participants.get(i).getId());
+			temp.setIdRoom(allocatedCoffeeRoomsPhase1.get(r).getId());	
+			if(r >= allocatedCoffeeRoomsPhase1.size() - 1) {
+				r = 0;
+			} else {
+				r++;
+			}		
+			coffeeAllocationsPhase1[i] = temp;
+		}		
 		
 		// Salvar alocações da etapa 1 no banco de dados.
-		for(int i = 0; i < allocations1.length; i++) {
-			allocations1[i].SaveRoomAllocation(conn, allocations1[i]);
+		for(int i = 0; i < eventAllocationsPhase1.length; i++) {
+			eventAllocationsPhase1[i].SaveRoomAllocation(conn, eventAllocationsPhase1[i]);
+		}
+		for(int i = 0; i < coffeeAllocationsPhase1.length; i++) {
+			coffeeAllocationsPhase1[i].SaveRoomAllocation(conn, coffeeAllocationsPhase1[i]);
 		}
 		System.out.println("Alocações da Etapa 1 realizadas!");
 		
 		// Etapa 2 do Evento.
-		System.out.println("Organizando Etapa 2...");
-		RoomAllocation[] allocations2 = new RoomAllocation[participants.size()]; // Alocações para a etapa 2 do evento.
+		System.out.print("Organizando Etapa 2...  ");
+		RoomAllocation[] eventAllocationsPhase2 = new RoomAllocation[participants.size()]; // Alocações para a etapa 2 do evento.
+		RoomAllocation[] coffeeAllocationsPhase2 = new RoomAllocation[participants.size()]; // Alocações para a etapa 1 do evento.
 		
 		// Realizar Trocas de Sala e distribuir participantes (Metade são alocados normalmente enquanto a outra metade é alocado de traz pra frente).
-		r = allocatedRooms.size() - 1; // indice da sala. 
+		// Salas de Evento
+		r = allocatedEventRooms.size() - 1; // indice da sala. 
 		temp = new RoomAllocation();
 		for(int i = 0; i < participants.size() / 2; i++) {
 			temp = new RoomAllocation();
 			temp.setEventPhase(2);
 			temp.setIdPerson(participants.get(i).getId());
-			temp.setIdRoom(allocatedRooms.get(r).getId());	
+			temp.setIdRoom(allocatedEventRooms.get(r).getId());	
 			if(r < 1) {
-				r = allocatedRooms.size() - 1;
+				r = allocatedEventRooms.size() - 1;
 			} else {
 				r--;
 			}		
-			allocations2[i] = temp;
+			eventAllocationsPhase2[i] = temp;
 		}
 		r = 0;
 		for(int i = participants.size() / 2; i < participants.size(); i++) {
 			temp = new RoomAllocation();
 			temp.setEventPhase(2);
 			temp.setIdPerson(participants.get(i).getId());
-			temp.setIdRoom(allocatedRooms.get(r).getId());	
-			if(r >= allocatedRooms.size() - 1) {
+			temp.setIdRoom(allocatedEventRooms.get(r).getId());	
+			if(r >= allocatedEventRooms.size() - 1) {
 				r = 0;
 			} else {
 				r++;
 			}		
-			allocations2[i] = temp;
+			eventAllocationsPhase2[i] = temp;
+		}
+		// Salas de Café
+		r = 0; // indice da sala. 
+		temp = new RoomAllocation();
+		for(int i = 0; i < participants.size(); i++) {
+			temp = new RoomAllocation();
+			temp.setEventPhase(2);
+			temp.setIdPerson(participants.get(i).getId());
+			temp.setIdRoom(allocatedCoffeeRoomsPhase2.get(r).getId());	
+			if(r >= allocatedCoffeeRoomsPhase2.size() - 1) {
+				r = 0;
+			} else {
+				r++;
+			}		
+			coffeeAllocationsPhase2[i] = temp;
 		}
 		
 		// Salvar alocações da etapa 2 no banco de dados.
-		for(int i = 0; i < allocations2.length; i++) {
-			allocations2[i].SaveRoomAllocation(conn, allocations2[i]);
+		for(int i = 0; i < eventAllocationsPhase2.length; i++) {
+			eventAllocationsPhase2[i].SaveRoomAllocation(conn, eventAllocationsPhase2[i]);
+		}
+		for(int i = 0; i < coffeeAllocationsPhase2.length; i++) {
+			coffeeAllocationsPhase2[i].SaveRoomAllocation(conn, coffeeAllocationsPhase2[i]);
 		}
 		System.out.println("Alocações da Etapa 2 realizadas!");
 		
 		// Mostrar Organização do Evento.
 		ShowSchedule();
 		
+		ShowMenu0(); // Voltar Ao Menu Inicial
+		
 	}
 	
-	private static void ShowSchedule() {
-		List<RoomAllocation> allocationsTemp;
+	private static void ShowSchedule() {		
 		List<Integer> allocationsPerRoomPhase1 = RoomAllocation.GetNumberOfAllocationsPerRoom(conn, 1);
-		List<Integer> allocationsPerRoomPhase2 = RoomAllocation.GetNumberOfAllocationsPerRoom(conn, 1);
-		System.out.println("--- ETAPA 1 ---");
+		List<Integer> allocationsPerRoomPhase2 = RoomAllocation.GetNumberOfAllocationsPerRoom(conn, 2);
+		List<RoomAllocation> allocationsTemp;
+		EventRoom erTemp;
+		CoffeeRoom crTemp;
+		Person pTemp;
+		System.out.println("");
+		System.out.println("------- Cronograma do Evento (Visão Geral) -------");
+		System.out.println("--------- ETAPA 1 ---------");
 		for(int i = 0; i < allocationsPerRoomPhase1.size(); i+=2) {
 			int roomID = allocationsPerRoomPhase1.get(i);
+			int roomType = Room.CheckRoomTypeByID(conn, roomID);
+			if(roomType == 1) {
+				erTemp = EventRoom.SearchRoomByID(conn, roomID);
+				System.out.println("--- Sala de Evento: " + erTemp.getName() + " Capacidade: " + erTemp.getMaxCapacity() + " ---");
+			} else if(roomType == 2) {
+				crTemp = CoffeeRoom.SearchRoomByID(conn, roomID);
+				System.out.println("--- Sala de Café: " + crTemp.getName() + " Capacidade: " + crTemp.getMaxCapacity() + " ---");
+			}
 			allocationsTemp = RoomAllocation.ListAllocation(conn, "eventPhase = 1 AND Room_idRoom = " + roomID);
 			for(int j = 0; j < allocationsPerRoomPhase1.get(i+1);j++) {
 				int personID = allocationsTemp.get(j).getIdPerson();
+				pTemp = Person.SearchPersonByID(conn, personID);
+				System.out.println("(Participante) ID: " + pTemp.getId() +"  Nome: " + pTemp.getFirstName() + " " + pTemp.getSurName());
 			}
 		}
-		System.out.println("--- Salas  X ---"); // + pessoas
-		
-		System.out.println("--- Espaço de Café X ---"); // + pessoas
-		System.out.println("--- ETAPA 2 ---");
+		System.out.println("------------ ETAPA 2 ---------");
+		for(int i = 0; i < allocationsPerRoomPhase2.size(); i+=2) {
+			int roomID = allocationsPerRoomPhase2.get(i);
+			int roomType = Room.CheckRoomTypeByID(conn, roomID);
+			if(roomType == 1) {
+				erTemp = EventRoom.SearchRoomByID(conn, roomID);
+				System.out.println("--- Sala de Evento: " + erTemp.getName() + " Capacidade: " + erTemp.getMaxCapacity() + " ---");
+			} else if(roomType == 2) {
+				crTemp = CoffeeRoom.SearchRoomByID(conn, roomID);
+				System.out.println("--- Sala de Café: " + crTemp.getName() + " Capacidade: " + crTemp.getMaxCapacity() + " ---");
+			}
+			allocationsTemp = RoomAllocation.ListAllocation(conn, "eventPhase = 2 AND Room_idRoom = " + roomID);
+			for(int j = 0; j < allocationsPerRoomPhase2.get(i+1);j++) {
+				int personID = allocationsTemp.get(j).getIdPerson();
+				pTemp = Person.SearchPersonByID(conn, personID);
+				System.out.println("(Participante) ID: " + pTemp.getId() +"  Nome: " + pTemp.getFirstName() + " " + pTemp.getSurName());
+			}
+		}
+		System.out.println("--------------------------------------------------");
 	}
 	
 	// Leitura de uma Opção de Menu (Inteiro)

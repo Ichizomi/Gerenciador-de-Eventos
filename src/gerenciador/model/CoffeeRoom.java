@@ -88,6 +88,28 @@ public class CoffeeRoom extends Room {
 		}
 	}
 	
+	// Consultar salas de café no banco de dados (por ID).
+	public static CoffeeRoom SearchRoomByID(ConnectDB connection, int id) {
+		CoffeeRoom r = new CoffeeRoom();
+		String sql = "SELECT * FROM room WHERE idRoom = " + id + " AND roomType = 2;";			
+		try {
+		    PreparedStatement statement = connection.connect().prepareStatement(sql);
+			ResultSet rs = statement.executeQuery(sql);
+			while(rs.next()) {
+				int idRoom = rs.getInt("idRoom");
+				String name = rs.getString("name");
+				int maxCapacity = rs.getInt("maxCapacity");					
+				r = new CoffeeRoom(idRoom, name, maxCapacity);
+			}
+			return r;
+		} catch (SQLException e) {
+		    e.printStackTrace();
+		    return r;
+		} finally {
+			connection.disconnect();
+		}
+	}
+	
 	// Atualiza dados de uma sala de café no banco de dados (por ID)
 	public static void UpdateRoom(ConnectDB connection, int id, CoffeeRoom updatedRoom) {
 		String sql = "UPDATE room SET name = '" + updatedRoom.getName() + "', maxCapacity = " + updatedRoom.getMaxCapacity() + " WHERE idRoom = " + id + ";";			
