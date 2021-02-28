@@ -2,6 +2,10 @@ package gerenciador.controller;
 
 import gerenciador.model.*;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -14,7 +18,7 @@ public class EventManager {
 	private static Scanner scan = new Scanner(System.in); // Scanner para leitura da entrada de dados do usuário. (por linha de comando)
 	
 	// Função principal para executar o programa.
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		
 		conn.connect();	//Estabelece conexão com o banco.
 
@@ -22,11 +26,10 @@ public class EventManager {
 		
 		conn.disconnect(); // Encerra conexão com o banco.
 				
-		//conn.ClearDatabase(conn); // Limpar todas as tabelas do banco.
 	}
 	
 	// Menu de interação inicial do sistema.
-	private static void ShowMenu0() {
+	private static void ShowMenu0() throws IOException {
 		System.out.println();
 		System.out.println("--- Sistema de Gerênciamento de Eventos ---");		
 		System.out.println("1) Consultar/Listar Dados");
@@ -34,9 +37,11 @@ public class EventManager {
 		System.out.println("3) Organizar Evento");
 		System.out.println("4) Ver Cronograma do Evento");
 		System.out.println("5) Limpar Banco de Dados");
+		System.out.println("6) Importar Base de Dados de Exemplo");
 		System.out.println("--- ----------------------------------- ---");
 		System.out.print("Digite o número da opção desejada: ");
 		int choice = ReadOption();
+		String confirm;
 		scan.nextLine(); // Limpa Scanner.
 		System.out.println();
 		switch(choice) {
@@ -55,7 +60,7 @@ public class EventManager {
 				break;
 			case 5:
 				System.out.println("Essa operação irá deletar os dados em todas as tabelas do banco de dados. Para continuar digite \"SIM\": ");
-				String confirm = scan.nextLine();
+				confirm = scan.nextLine();
 				if(confirm.contains("SIM")) {
 					System.out.println("Banco de dados limpado.");
 					conn.ClearDatabase(conn); // Limpar todas as tabelas do banco.
@@ -63,6 +68,20 @@ public class EventManager {
 				} else {
 					System.out.println("Operação de limpeza cancelada.");
 				}
+				ShowMenu0();
+				break;
+			case 6:
+				System.out.println("Essa operação irá deletar os dados em todas as tabelas do banco de dados antes de importar os exemplos.");
+				System.out.println("Para continuar digite \"SIM\": ");
+				confirm = scan.nextLine();
+				if(confirm.contains("SIM")) {
+					System.out.println("Banco de dados limpado.");
+					conn.ClearDatabase(conn); // Limpar todas as tabelas do banco.
+					conn.connect();	//Estabelece conexão com o banco.
+					ImportSampleData();
+				} else {
+					System.out.println("Operação de limpeza cancelada.");
+				}				
 				ShowMenu0();
 				break;
 			default:
@@ -73,7 +92,7 @@ public class EventManager {
 	}
 	
 	// Menu para Opção 1 - Consultar/Listar Dados
-	private static void ShowMenu1() {
+	private static void ShowMenu1() throws IOException  {
 		System.out.println();
 		System.out.println("--- Consulta/Listagem de Dados ---");		
 		System.out.println("1) Lista Salas de Evento");
@@ -225,7 +244,7 @@ public class EventManager {
 	}
 	
 	// Menu para Opção 2 - Cadastro/Alteração/Remoção de Dados
-	private static void ShowMenu2() {
+	private static void ShowMenu2() throws IOException  {
 		System.out.println();
 		System.out.println("--- Cadastrar/Alterar/Remover Dados ---");		
 		System.out.println("1) Cadastrar Sala");
@@ -306,7 +325,7 @@ public class EventManager {
 	}
 	
 	// Menu para Opção 2-2 - Editar Sala
-	private static void ShowMenu2_2() {
+	private static void ShowMenu2_2() throws IOException  {
 		System.out.println("--- Editar Sala ---");
 		int roomType = AskRoomType();
 		if(roomType != 1 && roomType != 2) {
@@ -431,7 +450,7 @@ public class EventManager {
 	}
 	
 	// Menu para Opção 2-3 - Remover Sala
-	private static void ShowMenu2_3() {
+	private static void ShowMenu2_3() throws IOException  {
 		System.out.println("--- Remover Sala ---");
 		int roomType = AskRoomType();
 		if(roomType != 1 && roomType != 2) {
@@ -510,7 +529,7 @@ public class EventManager {
 	}
 	
 	// Menu para Opção 2-5 - Editar Pessoa
-	private static void ShowMenu2_5() {
+	private static void ShowMenu2_5() throws IOException  {
 		System.out.println("--- Editar Pessoa ---");
 		System.out.println("Escolher o método utilizado para a editar os dados de uma pessoa: ");
 		System.out.println("1) Informar o ID diretamente");
@@ -580,7 +599,7 @@ public class EventManager {
 	}
 		
 	// Menu para Opção 2-6 - Remover Pessoa
-	private static void ShowMenu2_6() {
+	private static void ShowMenu2_6() throws IOException  {
 		System.out.println("--- Remover Pessoa ---");
 		System.out.println("Escolher o método utilizado para a remoção da pessoa: ");
 		System.out.println("1) Informar o ID diretamente");
@@ -695,7 +714,7 @@ public class EventManager {
 	}	
 	
 	// Abre menu para busca de uma pessoa (por nome ou sobrenome).
-	private static Person SearchPersonMenu() {
+	private static Person SearchPersonMenu() throws IOException  {
 		Person p = new Person();
 		System.out.println("Escolha o método da busca: ");
 		System.out.println("1) Buscar por primeiro nome");
@@ -739,7 +758,7 @@ public class EventManager {
 	}
 	
 	// Menu para Opção 3 - Organizar um Evento.
-	private static void OrganizeEvent() {
+	private static void OrganizeEvent() throws IOException {
 		List<Person> participants = Person.ListPeople(conn, false);
 		List<EventRoom> eventRooms = EventRoom.ListRoom(conn, false);
 		List<CoffeeRoom> coffeeRooms = CoffeeRoom.ListRoom(conn, false);
@@ -999,6 +1018,57 @@ public class EventManager {
 		} else {
 			scan.nextLine(); // Limpa scanner.
 			return -1;
+		}
+	}
+	
+	// Carrega no banco exemplos de dados pré-criados.
+	private static void ImportSampleData() throws IOException {
+		
+		BufferedReader br = new BufferedReader(
+		        new InputStreamReader(new FileInputStream("src/gerenciador/controller/SampleData.txt")));
+		try {
+		    String line;
+	    	ArrayList<String> words = new ArrayList<>();
+	    	String[] wordsArray;
+	    	int readingMode = -1; // Modo de leitura muda quando texto atingi as tags prédefinidas [Person] e [Room].
+		    while ((line = br.readLine()) != null) {
+		        // process line
+		    	// Quebra linha em locais com Tab.
+		    	wordsArray = line.split("\t"); 
+                for(String each : wordsArray){
+                    if(!"".equals(each)){
+                        words.add(each);
+                    }
+                }
+                
+                if(line.equals("[Person]")) {
+                	readingMode = 1;
+                } else if(line.equals("[Room]")) {
+                	readingMode = 2;
+                } else {
+                	// Processar dependendo do modo de leitura.
+                	if(readingMode == 1) {
+                		// Ler Pessoa
+                		Person temp = new Person(words.get(0), words.get(1));
+                		temp.SavePerson(conn, temp);
+                	} else if (readingMode == 2) {
+                		// Ler Sala
+                		String roomName = words.get(0);
+                		int capacity = Integer.parseInt(words.get(1));
+                		int roomType = Integer.parseInt(words.get(2));
+                		if(roomType == 1) {
+                			EventRoom erTemp = new EventRoom(roomName, capacity);
+                			erTemp.SaveRoom(conn, erTemp);
+                		} else if (roomType == 2) {
+                			CoffeeRoom crTemp = new CoffeeRoom(roomName, capacity);
+                			crTemp.SaveRoom(conn, crTemp);
+                		}
+                	}
+                }                	           
+                words = new ArrayList<>(); // Limpa palavra já lidas.
+		    }
+		} finally {
+		    br.close();
 		}
 	}
 	

@@ -1,0 +1,89 @@
+[Person]
+John	Selene Ince
+Jacob	Roberts
+Sally	Elodie Ball
+Joe	Allan
+Faith	Taye McDonald
+Phil	Trevor Ellison
+Simon	Russell
+Diana	George Quinn
+Carl	Dex Ross
+Chloe	Rylie Lee
+Robert	Mathis
+Jacob	Young
+Audrey	Wallace
+Carolyn	Georgina Sharp
+Stephen	Henry Nash
+Wanda	King
+Jacob	Luke Clarkson
+Isaac	Brighton Skinner
+Keith	Robert Walker
+Madeleine	Sharp
+Deirdre	Harris
+Sue	Alsop
+Victoria	Kathryn Mackenzie
+Faith	Burgess
+Jason	Cameron Ogden
+Ian	McGrath
+Dan	Harris
+Oliver	Trey Brown
+David	Parsons
+Carl	McLean
+Samantha	Dominick Henderson
+Vanessa	Baker
+Connor	Emeline Jones
+Robert	Glover
+Bernadette	Love Rutherford
+Leonard	Aaron Piper
+Hannah	Vanessa Robertson
+Jennifer	Sharp
+Donna	Quinn
+Donna	McLean
+Wanda	Edmunds
+Christian	Wilkins
+Elizabeth	Smith
+Samantha	Grant
+Rebecca	Quinn
+Penelope	Gray
+Frank	Lyman
+Frank	Mackenzie
+Lucas	Vance
+Fiona	Marshall
+Neil	Welch
+Bella	Reid
+Anna	Kathryn Lyman
+Alexander	Chapman
+Amelia	Bower
+Austin	Rampling
+Joe	Tucker
+Tim	Fisher
+Carol	Beck Arnold
+Amy	Russell
+Amelia	Gray
+Alexandra	Ogden
+Rachel	Ellory Fraser
+Sue	Nash
+Julian	Parr
+Victor	Glover
+Justin	Rene Walsh
+Diana	Hardacre
+Simon	Gill
+Hannah	Quinn
+Oliver	Blake Johnston
+Austin	May
+Boris	Gavin Greene
+Deirdre	Dickens
+Heather	Candice Arnold
+Anthony	Bell
+Phil	Judd Simpson
+Jan	Lewis
+Madeleine	Clark
+Jason	James
+[Room]
+Sala 1	20	1
+Sala 2	20	1
+Sala 3	20	1
+Sala 4	20	1
+Sala 5	20	1
+Café 1	40	2
+Café 2	40	2
