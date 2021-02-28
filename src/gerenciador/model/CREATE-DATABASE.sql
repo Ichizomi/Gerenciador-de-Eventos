@@ -43,8 +43,8 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `EventManagerDB`.`Room_Allocation` (
   `Person_idPerson` INT NOT NULL,
   `Room_idRoom` INT NOT NULL,
-  `eventPhase` INT NULL,
-  PRIMARY KEY (`Person_idPerson`, `Room_idRoom`),
+  `eventPhase` INT NOT NULL,
+  PRIMARY KEY (`Person_idPerson`, `Room_idRoom`, `eventPhase`),
   INDEX `fk_Person_has_Room_Room1_idx` (`Room_idRoom` ASC) VISIBLE,
   INDEX `fk_Person_has_Room_Person_idx` (`Person_idPerson` ASC) VISIBLE,
   CONSTRAINT `fk_Person_has_Room_Person`

@@ -63,5 +63,19 @@ public class ConnectDB {
 			connection.disconnect();
 		}
 	}
+	
+	// Delete only room_allocation records.
+	public void ClearAllocations(ConnectDB connection) {
+		String sql1 = "DELETE FROM room_allocation;";
+		try {
+			int status = 0;
+		    PreparedStatement statement = connection.connect().prepareStatement(sql1);			
+			status = statement.executeUpdate();
+		} catch (SQLException e) {
+		    e.printStackTrace();
+		} finally {
+			connection.disconnect();
+		}
+	}
 
 }

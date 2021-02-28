@@ -3,6 +3,7 @@ package gerenciador.controller;
 import gerenciador.model.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -30,9 +31,12 @@ public class EventManager {
 		System.out.println("--- Sistema de Gerênciamento de Eventos ---");		
 		System.out.println("1) Consultar/Listar Dados");
 		System.out.println("2) Cadastrar/Alterar/Remover Dados");
+		System.out.println("3) Organizar Evento");
+		System.out.println("4) Limpar Banco de Dados");
 		System.out.println("--- ----------------------------------- ---");
 		System.out.print("Digite o número da opção desejada: ");
 		int choice = ReadOption();
+		scan.nextLine(); // Limpa Scanner.
 		System.out.println();
 		switch(choice) {
 			case 1:
@@ -40,6 +44,21 @@ public class EventManager {
 				break;
 			case 2:
 				ShowMenu2();
+				break;
+			case 3:
+				OrganizeEvent();
+				break;
+			case 4:
+				System.out.println("Essa operação irá deletar os dados em todas as tabelas do banco de dados. Para continuar digite \"SIM\": ");
+				String confirm = scan.nextLine();
+				if(confirm.contains("SIM")) {
+					System.out.println("Banco de dados limpado.");
+					conn.ClearDatabase(conn); // Limpar todas as tabelas do banco.
+					conn.connect();	//Estabelece conexão com o banco.
+				} else {
+					System.out.println("Operação de limpeza cancelada.");
+				}
+				ShowMenu0();
 				break;
 			default:
 				System.out.println("Opção inválida! Tente novamente");
@@ -598,7 +617,169 @@ public class EventManager {
 		return p;
 	}
 	
+	// Menu para Opção 3 - Organizar um Evento.
+	private static void OrganizeEvent() {
+		List<Person> participants = Person.ListPeople(conn, false);
+		List<EventRoom> eventRooms = EventRoom.ListRoom(conn, false);
+		List<CoffeeRoom> coffeeRooms = CoffeeRoom.ListRoom(conn, false);
+		
+		// Passo 0 - Remover Alocações Prévias 
+		conn.ClearAllocations(conn);
+		
+		// Passo 1 - Verificar se há dados minimos para as duas etapas.
+		System.out.println("Verificando requisitos mínimos...");		
+		
+		// Participantes >= 4
+		if(participants.size() < 4) {
+			System.out.println("Organização interrompida! É preciso ter 4 ou mais participantes cadastrados. Favor tentar novamente...");
+			ShowMenu0();
+		}
+		
+		// Salas de Evento >= 2
+		if(eventRooms.size() < 2) {
+			System.out.println("Organização interrompida! É preciso ter pelo menos duas salas de evento cadastradas. Favor tentar novamente...");
+			ShowMenu0();
+		}
+		
+		// Salas de Café >= 2
+		if(coffeeRooms.size() < 2) {
+			System.out.println("Organização interrompida! É preciso ter pelo menos duas salas de café cadastradas. Favor tentar novamente...");
+			ShowMenu0();
+		}
+		
+		// Espaço suficiente nas salas do evento.
+		int totalEventRoomCapacity = 0;
+		for(int i = 0; i < eventRooms.size(); i++) {
+			totalEventRoomCapacity += eventRooms.get(i).getMaxCapacity();
+		}
+		if(totalEventRoomCapacity < participants.size()) {
+			System.out.println("Organização interrompida! Há mais participantes (" + participants.size() + ") do que lugares em salas de evento(" + totalEventRoomCapacity + "). Favor tentar novamente...");
+			ShowMenu0();
+		}
+		
+		// Espaço suficiente nas salas de café.
+		int totalCoffeeRoomCapacity = 0;
+		for(int i = 0; i < eventRooms.size(); i++) {
+			totalCoffeeRoomCapacity += eventRooms.get(i).getMaxCapacity();
+		}
+		if(totalCoffeeRoomCapacity < participants.size()) {
+			System.out.println("Organização interrompida! Há mais participantes (" + participants.size() + ") do que espaço em salas de café(" + totalCoffeeRoomCapacity + "). Favor tentar novamente...");
+			ShowMenu0();
+		}
+		
+		System.out.println("OK!");
+				
+		// Passo 2 - Fazer alocações na tabela room allocation.
+		// Regra de Negócio - Diferença máxima do número de participantes em cada sala é 1.
+		// Regra de Negócio - Metade das pessoas em uma sala devem mudar de sala para o segundo estágio.
+		
+		// Alocar Salas para o Evento
+		List<EventRoom> allocatedRooms = new ArrayList<>(); // Lista de Salas Reservadas
+		int currentEventRoomAllocations = 0; // Espaços de sala já alocados.
+		for(int i = 0; i < eventRooms.size(); i++) {
+			// Se ainda não foram alocados espaços suficiente.
+			if(totalEventRoomCapacity > currentEventRoomAllocations) {
+				currentEventRoomAllocations += eventRooms.get(i).getMaxCapacity(); // Aloca espaços.
+				allocatedRooms.add(eventRooms.get(i)); // Reserva a sala.
+			} else {
+				break; // Se já foram alocados espaços suficiente, não é preciso usar as salas restantes.
+			}
+			
+		}
+		
+		// Etapa 1 do Evento.
+		System.out.println("Organizando Etapa 1...");
+		Collections.shuffle(participants); // Randomiza participantes.
+		RoomAllocation[] allocations1 = new RoomAllocation[participants.size()]; // Alocações para a etapa 1 do evento.
+		System.out.println("Número de Participantes: " + allocations1.length);
+		
+
+		System.out.println("Total de Salas de Eventos: " + eventRooms.size());
+		System.out.println("Número de Salas de Evento Reservadas: " + allocatedRooms.size());
+		
+		// Distribui Participantes entre as salas reservadas (alternando em 1 para cada sala).
+		int r = 0; // indice da sala. 
+		RoomAllocation temp = new RoomAllocation();
+		for(int i = 0; i < participants.size(); i++) {
+			temp = new RoomAllocation();
+			temp.setEventPhase(1);
+			temp.setIdPerson(participants.get(i).getId());
+			temp.setIdRoom(allocatedRooms.get(r).getId());	
+			if(r >= allocatedRooms.size() - 1) {
+				r = 0;
+			} else {
+				r++;
+			}		
+			allocations1[i] = temp;
+		}
+		
+		// Salvar alocações da etapa 1 no banco de dados.
+		for(int i = 0; i < allocations1.length; i++) {
+			allocations1[i].SaveRoomAllocation(conn, allocations1[i]);
+		}
+		System.out.println("Alocações da Etapa 1 realizadas!");
+		
+		// Etapa 2 do Evento.
+		System.out.println("Organizando Etapa 2...");
+		RoomAllocation[] allocations2 = new RoomAllocation[participants.size()]; // Alocações para a etapa 2 do evento.
+		
+		// Realizar Trocas de Sala e distribuir participantes (Metade são alocados normalmente enquanto a outra metade é alocado de traz pra frente).
+		r = allocatedRooms.size() - 1; // indice da sala. 
+		temp = new RoomAllocation();
+		for(int i = 0; i < participants.size() / 2; i++) {
+			temp = new RoomAllocation();
+			temp.setEventPhase(2);
+			temp.setIdPerson(participants.get(i).getId());
+			temp.setIdRoom(allocatedRooms.get(r).getId());	
+			if(r < 1) {
+				r = allocatedRooms.size() - 1;
+			} else {
+				r--;
+			}		
+			allocations2[i] = temp;
+		}
+		r = 0;
+		for(int i = participants.size() / 2; i < participants.size(); i++) {
+			temp = new RoomAllocation();
+			temp.setEventPhase(2);
+			temp.setIdPerson(participants.get(i).getId());
+			temp.setIdRoom(allocatedRooms.get(r).getId());	
+			if(r >= allocatedRooms.size() - 1) {
+				r = 0;
+			} else {
+				r++;
+			}		
+			allocations2[i] = temp;
+		}
+		
+		// Salvar alocações da etapa 2 no banco de dados.
+		for(int i = 0; i < allocations2.length; i++) {
+			allocations2[i].SaveRoomAllocation(conn, allocations2[i]);
+		}
+		System.out.println("Alocações da Etapa 2 realizadas!");
+		
+		// Mostrar Organização do Evento.
+		ShowSchedule();
+		
+	}
 	
+	private static void ShowSchedule() {
+		List<RoomAllocation> allocationsTemp;
+		List<Integer> allocationsPerRoomPhase1 = RoomAllocation.GetNumberOfAllocationsPerRoom(conn, 1);
+		List<Integer> allocationsPerRoomPhase2 = RoomAllocation.GetNumberOfAllocationsPerRoom(conn, 1);
+		System.out.println("--- ETAPA 1 ---");
+		for(int i = 0; i < allocationsPerRoomPhase1.size(); i+=2) {
+			int roomID = allocationsPerRoomPhase1.get(i);
+			allocationsTemp = RoomAllocation.ListAllocation(conn, "eventPhase = 1 AND Room_idRoom = " + roomID);
+			for(int j = 0; j < allocationsPerRoomPhase1.get(i+1);j++) {
+				int personID = allocationsTemp.get(j).getIdPerson();
+			}
+		}
+		System.out.println("--- Salas  X ---"); // + pessoas
+		
+		System.out.println("--- Espaço de Café X ---"); // + pessoas
+		System.out.println("--- ETAPA 2 ---");
+	}
 	
 	// Leitura de uma Opção de Menu (Inteiro)
 	private static int ReadOption() {
@@ -610,13 +791,4 @@ public class EventManager {
 		}
 	}
 	
-	// Leitura de um Campo de Texto
-	private static String ReadText(int maxSize) {
-		if(scan.hasNext()) {
-			return scan.nextLine();
-		} else {
-			scan.nextLine(); // Limpa scanner.
-			return "Invalido";
-		}
-	}
 }
