@@ -43,9 +43,9 @@ public class ConnectDB {
 	
 	// Delete database
 	public void ClearDatabase(ConnectDB connection) {
-		String sql1 = "DELETE FROM person;";	
+		String sql1 = "DELETE FROM room_allocation;";	
 		String sql2 = "DELETE FROM room;";
-		String sql3 = "DELETE FROM room_allocation;";
+		String sql3 = "DELETE FROM person;";
 		try {
 			int status = 0;
 		    PreparedStatement statement = connection.connect().prepareStatement(sql1);			

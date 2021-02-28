@@ -87,3 +87,6 @@ Sala 4	20	1
 Sala 5	20	1
 Café 1	40	2
 Café 2	40	2
+Café 3	40	2
+Café 4	40	2
+Café 5	40	2

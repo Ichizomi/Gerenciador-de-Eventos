@@ -799,11 +799,13 @@ public class EventManager {
 		
 		// Espaço suficiente nas salas de café. O espaço deve ser maior que o dobro do número de participantes para que as salas de café sejam distintas nas duas etapas do evento.
 		int totalCoffeeRoomCapacity = 0;
-		for(int i = 0; i < eventRooms.size(); i++) {
-			totalCoffeeRoomCapacity += eventRooms.get(i).getMaxCapacity();
+		for(int i = 0; i < coffeeRooms.size(); i++) {
+			totalCoffeeRoomCapacity += coffeeRooms.get(i).getMaxCapacity();
 		}
 		if(totalCoffeeRoomCapacity < participants.size() * 2) {
-			System.out.println("Organização interrompida! Há mais participantes (" + participants.size() + ") do que espaço em salas de café(" + totalCoffeeRoomCapacity + "). Favor tentar novamente...");
+			System.out.println("Organização interrompida! Há mais participantes (" + participants.size() + ") do que espaços disponíveis em salas de café (" + totalCoffeeRoomCapacity + ")");
+			System.out.println("Deve existir o dobro de lugares em salas de café em relação número de participantes. Favor tentar novamente...");
+			System.out.println("Pois as salas de café devem ser distintas (não se repetir) entre as etapas. Favor tentar novamente...");
 			ShowMenu0();
 		}
 		
@@ -818,7 +820,7 @@ public class EventManager {
 		int currentEventRoomAllocations = 0; // Espaços de sala já alocados.
 		for(int i = 0; i < eventRooms.size(); i++) {
 			// Se ainda não foram alocados espaços suficiente.
-			if(totalEventRoomCapacity > currentEventRoomAllocations) {
+			if(participants.size() > currentEventRoomAllocations) {
 				currentEventRoomAllocations += eventRooms.get(i).getMaxCapacity(); // Aloca espaços.
 				allocatedEventRooms.add(eventRooms.get(i)); // Reserva a sala.
 			} else {
